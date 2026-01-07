@@ -4,10 +4,48 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # -----------------------------
-# Global style
+# UI THEME: Coffee / Latte
 # -----------------------------
-plt.style.use("dark_background")
-sns.set_theme(style="darkgrid")
+st.markdown("""
+<style>
+    /* Main background */
+    .stApp {
+        background-color: #2B1B14;  /* dark coffee */
+        color: #F5E6D3;             /* cream text */
+    }
+
+    /* Titles */
+    h1, h2, h3, h4 {
+        color: #D2B48C;  /* latte / tan */
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #3A241B;  /* mocha */
+        color: #F5E6D3;
+    }
+
+    /* Metric cards */
+    div[data-testid="stMetric"] {
+        background-color: #4A2C1D;  /* coffee milk */
+        border: 1px solid #C19A6B;  /* caramel */
+        border-radius: 12px;
+        padding: 12px;
+        color: #F5E6D3;
+    }
+
+    /* Dataframe container */
+    .stDataFrame {
+        background-color: #3A241B;
+    }
+
+    /* Selectboxes */
+    div[data-baseweb="select"] {
+        background-color: #4A2C1D !important;
+        color: #F5E6D3 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # -----------------------------
 # Page config
@@ -32,7 +70,9 @@ def load_data():
 
 master = load_data()
 
+# -----------------------------
 # Derived columns (safety)
+# -----------------------------
 if "system_load" not in master.columns:
     master["system_load"] = master["total_demo_updates"] + master["total_bio_updates"]
 
@@ -79,7 +119,7 @@ c3.metric("Total Bio Updates", int(filtered["total_bio_updates"].sum()))
 c4.metric("Avg Migration Pressure", round(filtered["migration_pressure_index"].mean(), 2))
 
 # -----------------------------
-# 1️⃣ Time Series (COLORED)
+# 1️⃣ Time Series
 # -----------------------------
 st.subheader("📈 Activity Over Time")
 
@@ -89,9 +129,9 @@ ts = filtered.groupby("date", as_index=False)[
 
 fig1, ax1 = plt.subplots()
 
-ax1.plot(ts["date"], ts["total_enrolment"], label="Enrolment", color="#00E5FF", linewidth=2)
-ax1.plot(ts["date"], ts["total_demo_updates"], label="Demographic Updates", color="#FF9100", linewidth=2)
-ax1.plot(ts["date"], ts["total_bio_updates"], label="Biometric Updates", color="#00E676", linewidth=2)
+ax1.plot(ts["date"], ts["total_enrolment"], label="Enrolment")
+ax1.plot(ts["date"], ts["total_demo_updates"], label="Demographic Updates")
+ax1.plot(ts["date"], ts["total_bio_updates"], label="Biometric Updates")
 
 ax1.legend()
 ax1.set_title("Aadhaar Activity Over Time")
@@ -101,9 +141,9 @@ ax1.set_ylabel("Count")
 st.pyplot(fig1)
 
 # -----------------------------
-# 2️⃣ SCATTER PLOT (COLORED BY RISK)
+# 2️⃣ Scatter Plot
 # -----------------------------
-st.subheader("🔵 Enrolment vs System Load (Color = Migration Pressure)")
+st.subheader("🔵 Enrolment vs System Load")
 
 fig2, ax2 = plt.subplots()
 
@@ -124,7 +164,7 @@ plt.colorbar(sc, ax=ax2, label="Migration Pressure Index")
 st.pyplot(fig2)
 
 # -----------------------------
-# 3️⃣ HEATMAP (BETTER COLORS)
+# 3️⃣ Heatmap
 # -----------------------------
 st.subheader("🔥 State-wise System Load Heatmap")
 
@@ -147,7 +187,7 @@ ax3.set_title("State-wise Aadhaar System Load")
 st.pyplot(fig3)
 
 # -----------------------------
-# 4️⃣ Top Risk Districts Table (GRADIENT COLOR)
+# 4️⃣ Top Risk Districts Table
 # -----------------------------
 st.subheader("🚨 Top High-Risk Districts (Migration Pressure)")
 
@@ -162,11 +202,16 @@ st.dataframe(
         subset=["migration_pressure_index"],
         cmap="YlOrRd"
     ),
-    use_container_width=True
+    use_container_width=True,
+    height=450
 )
 
 # -----------------------------
-# Raw Data
+# Raw Data Explorer
 # -----------------------------
-with st.expander("📄 Show Raw Filtered Data"):
-    st.dataframe(filtered, use_container_width=True)
+with st.expander("📄 Explore Full Filtered Data"):
+    st.dataframe(
+        filtered.sort_values("migration_pressure_index", ascending=False),
+        use_container_width=True,
+        height=400
+    )
